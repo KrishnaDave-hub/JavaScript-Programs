@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+            integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ=="
+            crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <title>Location Finder Using Zipcode</title>
+        <style>
+            .icon-remove,
+            .icon-check {
+                display: none;
+            }
+        </style>
+    </head>
+
+    <body>
+        <section class="hero hero-body is-dark container">
+            <h1 class="title">Us Location Info</h1>
+            <h2 class="subtitle">Enter a Zipcode to get the location Info</h2>
+            <form id="zipForm">
+                <div class="field">
+                    <div class="control has-icons-left has-icons-right">
+                        <input class="input zip is-large" type="text" placeholder="Enter Zipcode" />
+                        <span class="icon is-small is-left">
+                            <i class="fa fa-map-pin"></i>
+                        </span>
+                        <span class="icon is-small is-right icon-check">
+                            <i class="fa fa-check"></i>
+                        </span>
+                        <span class="icon is-small is-right icon-remove">
+                            <i class="fa fa-remove"></i>
+                        </span>
+                    </div>
+                </div>
+            </form>
+        </section>
+        <br />
+        <div class="container">
+            <div id="output"></div>
+        </div>
+        <script>
+            // Event Listner
+            document
+                .querySelector("#zipForm")
+                .addEventListener("submit", getLocationInfo);
+
+            // Event Listner for Delete
+            document.querySelector("body").addEventListener("click", deleteLocation);
+
+            function getLocationInfo(e) {
+                e.preventDefault();
+
+                // Get Zip Value
+                const zip = document.querySelector(".zip").value;
+
+                // Make Request
+                fetch(`https://api.zippopotam.us/us/${zip}`)
+                    .then((response) => {
+                        if (response.status != 200) {
+                            showIcon("remove");
+                            document.querySelector("#output").innerHTML = `
+                        <article class = "message is-danger">
+                        <div class=" message-body"> Invalid Zipcode, Please Enter Proper Zipcode Again</div></article>
+                        `;
+                            throw Error(response.statusText);
+                        } else {
+                            showIcon("check");
+                            return response.json();
+                        }
+                    })
+                    .then((data) => {
+                        // Show Location
+                        let output = "";
+                        data.places.forEach((place) => {
+                            output += `<artical class="message is-primary">
+                            <div class="messeage-header">
+                                <p>Location Info</p>
+                                <button class="delete"></button>
+                            </div>
+                            <div class ="message-body">
+                                <ul>
+                                    <li><strong>City: </strong>${place["place name"]}</li>    
+                                    <li><strong>State: </strong>${place["state"]}</li>    
+                                    <li><strong>Longitude: </strong>${place["longitude"]}</li>    
+                                    <li><strong>Latitude: </strong>${place["latitude"]}</li>    
+                                </ul>
+                            </div>`;
+                        });
+
+                        // Insert Into Output Div
+                        document.querySelector("#output").innerHTML = output;
+                    })
+                    .catch((err) => console.log(err));
+            }
+
+            //   Show Check or remove icon
+            function showIcon(icon) {
+                // Clear
+                document.querySelector(".icon-remove").style.display = "none";
+                document.querySelector(".icon-check").style.display = "none";
+                // Show Correct Icon
+                document.querySelector(`.icon-${icon}`).style.display = "inline-flex";
+            }
+
+            //   Delete Location Box
+            function deleteLocation(e) {
+                if (e.target.className == "delete") {
+                    document.querySelector(".message").remove();
+                    document.querySelector(".zip").value = "";
+                    document.querySelector(".icon-check").remove();
+                }
+            }
+        </script>
+    </body>
+
+</html>
